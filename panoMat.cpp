@@ -111,8 +111,14 @@ int main(int argc, char** argv)
     //Now creating blnak matrix twice size of images.
     //alternative with homogenious coordinates
     //Mat canvas(720, 540, 1, Scalar(0));
+    //This is for combining images I_1, I_2.
+    Mat v_12 = Mat::zeros(720,540,CV_8UC1);
 
-    Mat blankcanvas = Mat::zeros(720,540,CV_8UC1);
+
+    //--To later bring it all into the Pano
+    // cv::Mat pano = zeros(M_1.size( ), CV_8UC3);
+    // I_1.copyTo(pano, M_1);
+    // V_12.copyTo(pano, M_2);
 
     imshow("Pano Homography", img_matches);
 
@@ -125,3 +131,19 @@ void readme()
 {
     std::cout << " Usage: ./SURF_descriptor <img1> <img2>" << std::endl;
 }
+
+//--Compile
+/*
+
+g++ panoMat.cpp -I"/usr/local/Cellar/opencv/3.4.1_5/include" -L"/usr/local/Cellar/opencv/3.4.1_5/lib/" -I/u
+sr/local/include/opencv -I/usr/local/include -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -
+lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dpm -lopencv_face -lopencv_photo -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lo
+pencv_line_descriptor -lopencv_optflow -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrappin
+g -lopencv_surface_matching -lopencv_tracking -lopencv_datasets -lopencv_dnn -lopencv_plot -lopencv_xfeatures2d -lopencv_shape -lopencv_video -lopencv
+_ml -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_flann -lopencv_xobjdetect -lopencv_imgcodecs -lo
+pencv_objdetect -lopencv_xphoto -lopencv_imgproc -lopencv_core -o panoMat
+
+*/
+
+// --Run
+// ./panoMat IMG_0856-2.png IMG_0857-2.png
