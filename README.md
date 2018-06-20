@@ -3,7 +3,7 @@
 
 Currently showing this:
 
-![Image](https://github.com/elliotjpb/Pano/blob/master/example.jpg?raw=true)
+![Image](https://github.com/elliotjpb/Pano/blob/master/example.jpg?raw=true | width=200)
 
 Compile
 
