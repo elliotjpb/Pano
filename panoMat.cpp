@@ -103,28 +103,69 @@ int main(int argc, char** argv)
     obj_corners[2] = cvPoint(I_1.cols, I_1.rows); obj_corners[3] = cvPoint(0, I_1.rows);
     std::vector<Point2f> scene_corners(4);
 
-    //perspectiveTransform(obj_corners, scene_corners, H_12);
-    //-- Show detected matches
 
 
-    //Have 2 images. I_1, I_2. Need to transofm to the other with Homography H_12.
-    //Now creating blnak matrix twice size of images.
-    //alternative with homogenious coordinates
-    //Mat canvas(720, 540, 1, Scalar(0));
-    //This is for combining images I_1, I_2.
-    Mat v_12 = Mat::zeros(720,540,CV_8UC1);
-
-
-    //--To later bring it all into the Pano
-    // cv::Mat pano = zeros(M_1.size( ), CV_8UC3);
-    // I_1.copyTo(pano, M_1);
-    // V_12.copyTo(pano, M_2);
-
-    imshow("Pano Homography", img_matches);
+    // Use the Homography Matrix to warp the images
+    cv::Mat result = Mat::zeros(720,540,CV_8UC1);
+    warpPerspective(I_1,result,H_12,cv::Size(720,540));
+    cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
+    I_2.copyTo(half);
+    //imshow( "Result", result );
+    //return result;
 
     waitKey(0);
     return 0;
 }
+
+//perspectiveTransform(obj_corners, scene_corners, H_12);
+//-- Show detected matches
+
+
+//Have 2 images. I_1, I_2. Need to transofm to the other with Homography H_12.
+//Now creating blnak matrix twice size of images.
+//alternative with homogenious coordinates
+//Mat canvas(720, 540, 1, Scalar(0));
+//This is for combining images I_1, I_2.
+
+
+//Mat V_12 = Mat::zeros(720,540,CV_8UC1);
+
+//cv::warpPerspective(I_2, V_12, H_12, V_12.size( ));
+
+//Now you have four canvases, all of which are the width of the 4 combined images,
+//and with one of the images transformed into the relevant place on each.
+
+//NOW -- merge the transformed images onto eachother. With ROI
+/*
+selecting the rectangle region of interest inside the image and cut or
+display part of the image from the bigger picture.
+*/
+
+//set the left side to white size - 360x270.
+//Mat M_1 = Mat::zeros(270,360,CV_8UC1);
+//M_1.setTo(cv::Scalar(255,255,255));
+
+//Mat M_2 = Mat::zeros(270,360,CV_8UC1);
+
+
+//cv::warpPerspective(M_1, M_2, H_12, M_1.size( ));
+
+
+//cv::Mat pano = Mat::zeros(M_1.size( ), CV_8UC3);
+
+// I_1.copyTo(pano, M_1);
+// V_12.copyTo(pano, M_2);
+//
+
+// imshow("Pano Homography", pano);
+
+//Need to define M_1...
+//--To later bring it all into the Pano
+// cv::Mat pano = zeros(M_1.size( ), CV_8UC3);
+// I_1.copyTo(pano, M_1);
+// V_12.copyTo(pano, M_2);
+
+//imshow("Pano Homography", img_matches);
 
 /** @function readme */
 void readme()
