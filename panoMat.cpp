@@ -8,26 +8,14 @@
 #include <opencv2/xfeatures2d/nonfree.hpp>
 #include <opencv2/opencv.hpp>
 
-using namespace cv;
 using namespace cv::xfeatures2d;
+using namespace std;
+using namespace cv;
 
-void readme();
+Mat Stitching(Mat image1,Mat image2){
 
-/** @function main */
-int main(int argc, char** argv)
-{
-    if (argc != 3)
-    {
-        readme(); return -1;
-    }
-
-    Mat I_1 = imread(argv[1], IMREAD_GRAYSCALE);
-    Mat I_2 = imread(argv[2], IMREAD_GRAYSCALE);
-
-    if (!I_1.data || !I_2.data)
-    {
-        std::cout << " --(!) Error reading images " << std::endl; return -1;
-    }
+    Mat I_1 = image1;
+    Mat I_2 = image2;
 
     //-- Step 1: Detect the keypoints using SURF Detector
     int minHessian = 400;
@@ -104,14 +92,74 @@ int main(int argc, char** argv)
     std::vector<Point2f> scene_corners(4);
 
 
-
     // Use the Homography Matrix to warp the images
-    cv::Mat result = Mat::zeros(720,540,CV_8UC1);
-    warpPerspective(I_1,result,H_12,cv::Size(720,540));
+    cv::Mat result;
+    warpPerspective(I_1,result,H_12,cv::Size(800,600));
     cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
     I_2.copyTo(half);
-    //imshow( "Result", result );
-    //return result;
+    return result;
+
+}
+
+  // Mat translateImg(Mat &img, int offsetx, int offsety){
+  //   Mat trans_mat = (Mat_<double>(2,3) << 1, 0, offsetx, 0, 1, offsety);
+  //   warpAffine(img,img,trans_mat,img.size());
+  //   return trans_mat;
+  //
+  // }
+
+void readme(){
+    std::cout << " Usage: ./SURF_descriptor <img1> <img2>" << std::endl;
+}
+
+/** @function main */
+int main(int argc, char** argv){
+
+    if (argc != 3){
+        readme(); return -1;
+    }
+
+    Mat image1 = imread(argv[1], IMREAD_GRAYSCALE);
+    Mat image2 = imread(argv[2], IMREAD_GRAYSCALE);
+
+    if (!image1.data || !image2.data){
+        std::cout << " --(!) Error reading images " << std::endl; return -1;
+    }
+
+    //cvNamedWindow("Stitching", CV_WINDOW_AUTOSIZE);
+
+
+
+    imshow( "Result", Stitching(image1,image2));
+
+    //imshow( "Result", trans_mat);
+
+
+    //    while(1) {
+//        frame = cvQueryFrame(capture);
+//        if(loop>0){
+//            if(!frame) break;
+//
+//            image2=Mat(frame, false);
+//            result=Stitching(image1,image2);
+//            before_frame=result;
+//            frame=&before_frame;
+//            image1=result;
+//            image2.release();
+//            //imshow("Stitching",frame);
+//            cvShowImage("Stitching",frame);
+//            //break;
+//
+//        }else if(loop==0){
+//            //Mat aimage1(frame);
+//            image1=Mat(frame, false);
+//        }
+//        loop++;
+//        char c = cvWaitKey(33);
+//        if(c==27) break;
+//    }
+//
+    destroyWindow("Stitching");
 
     waitKey(0);
     return 0;
@@ -166,12 +214,6 @@ display part of the image from the bigger picture.
 // V_12.copyTo(pano, M_2);
 
 //imshow("Pano Homography", img_matches);
-
-/** @function readme */
-void readme()
-{
-    std::cout << " Usage: ./SURF_descriptor <img1> <img2>" << std::endl;
-}
 
 //--Compile
 /*
