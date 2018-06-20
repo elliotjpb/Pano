@@ -1,5 +1,10 @@
 # Testing Panoramas
 
+
+Currently showing this:
+
+![Image](https://github.com/elliotjpb/Pano/blob/master/example.jpg?raw=true)
+
 Compile
 
 `g++ panoMat.cpp -I"/usr/local/Cellar/opencv/3.4.1_5/include" -L"/usr/local/Cellar/opencv/3.4.1_5/lib/" -I/u
