@@ -44,8 +44,7 @@ Mat Stitching(Mat image1,Mat image2){
     double max_dist = 0; double min_dist = 100;
 
     //-- Quick calculation of max and min distances between keypoints
-    for (int i = 0; i < descriptors_object.rows; i++)
-    {
+    for (int i = 0; i < descriptors_object.rows; i++){
         double dist = matches[i].distance;
         if (dist < min_dist) min_dist = dist;
         if (dist > max_dist) max_dist = dist;
@@ -74,8 +73,7 @@ Mat Stitching(Mat image1,Mat image2){
     std::vector<Point2f> obj;
     std::vector<Point2f> scene;
 
-    for (int i = 0; i < good_matches.size(); i++)
-    {
+    for (int i = 0; i < good_matches.size(); i++){
         //-- Get the keypoints from the good matches
         obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
         scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
@@ -127,8 +125,6 @@ int main(int argc, char** argv){
     }
 
     //cvNamedWindow("Stitching", CV_WINDOW_AUTOSIZE);
-
-
 
     imshow( "Result", Stitching(image1,image2));
 
