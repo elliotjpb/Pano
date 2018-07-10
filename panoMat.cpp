@@ -83,19 +83,34 @@ Mat Stitching(Mat image1,Mat image2){
 
     std::cout << H_12 << '\n';
 
-    //-- Get the corners from the image_1 ( the object to be "detected" )
-    std::vector<Point2f> obj_corners(4);
-    obj_corners[0] = cvPoint(0, 0); obj_corners[1] = cvPoint(I_1.cols, 0);
-    obj_corners[2] = cvPoint(I_1.cols, I_1.rows); obj_corners[3] = cvPoint(0, I_1.rows);
-    std::vector<Point2f> scene_corners(4);
+    // //-- Get the corners from the image_1 ( the object to be "detected" )
+    // std::vector<Point2f> obj_corners(4);
+    // obj_corners[0] = cvPoint(0, 0); obj_corners[1] = cvPoint(I_1.cols, 0);
+    // obj_corners[2] = cvPoint(I_1.cols, I_1.rows); obj_corners[3] = cvPoint(0, I_1.rows);
+    // std::vector<Point2f> scene_corners(4);
 
 
     // Use the Homography Matrix to warp the images
-    cv::Mat result;
-    warpPerspective(I_1,result,H_12,cv::Size(800,600));
-    cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
-    I_2.copyTo(half);
-    return result;
+    Mat warpImage2 = Mat::zeros(360,480,CV_8UC1);
+    warpPerspective(I_2, warpImage2, H_12, Size(I_2.cols*2, I_2.rows*2), INTER_CUBIC);
+
+    //Point a cv::Mat header at it (no allocation is done)
+    Mat final(Size(I_2.cols*2 + I_1.cols, I_2.rows*2),CV_8UC3);
+    Mat testPlane(Size(I_2.cols*2 + I_1.cols, I_2.rows*2),CV_8UC3);
+     Mat roi1(final, Rect(0, 0,  I_1.cols, I_1.rows));
+     Mat roi2(final, Rect(0, 0, I_2.cols, I_2.rows));
+
+     Mat test(testPlane, Rect(0, 0,  I_1.cols, I_1.rows));
+     I_1.copyTo(test);
+
+    warpImage2.copyTo(roi2);
+    I_1.copyTo(roi1);
+
+    return testPlane;
+
+    // cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
+    // I_2.copyTo(half);
+   //return result;
 
 }
 
@@ -117,21 +132,28 @@ int main(int argc, char** argv){
         readme(); return -1;
     }
 
-    Mat image1 = imread(argv[1], IMREAD_GRAYSCALE);
-    Mat image2 = imread(argv[2], IMREAD_GRAYSCALE);
+    Mat image1 = imread(argv[1], IMREAD_COLOR);
+    Mat image2 = imread(argv[2], IMREAD_COLOR);
+
+    // Mat image1 = imread(argv[1], IMREAD_GRAYSCALE);
+    // Mat image2 = imread(argv[2], IMREAD_GRAYSCALE);
 
     if (!image1.data || !image2.data){
         std::cout << " --(!) Error reading images " << std::endl; return -1;
     }
 
-    //cvNamedWindow("Stitching", CV_WINDOW_AUTOSIZE);
-
     imshow( "Result", Stitching(image1,image2));
 
-    //imshow( "Result", trans_mat);
+    destroyWindow("Stitching");
+
+    waitKey(0);
+    return 0;
+}
+
+//imshow( "Result", trans_mat);
 
 
-    //    while(1) {
+//    while(1) {
 //        frame = cvQueryFrame(capture);
 //        if(loop>0){
 //            if(!frame) break;
@@ -155,11 +177,6 @@ int main(int argc, char** argv){
 //        if(c==27) break;
 //    }
 //
-    destroyWindow("Stitching");
-
-    waitKey(0);
-    return 0;
-}
 
 //perspectiveTransform(obj_corners, scene_corners, H_12);
 //-- Show detected matches
