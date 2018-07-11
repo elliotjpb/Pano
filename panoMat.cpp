@@ -73,6 +73,12 @@ Mat Stitching(Mat image1,Mat image2){
       warpImage2.copyTo(roi2);
       I_1.copyTo(roi1);
 
+      // cv::Mat result;
+      // warpPerspective(I_2,result,H_12,cv::Size(800,600));
+      // cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
+      // I_1.copyTo(half);
+      // return result;
+
     return final;
 
 }
