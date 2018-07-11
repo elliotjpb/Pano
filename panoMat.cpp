@@ -17,109 +17,65 @@ Mat Stitching(Mat image1,Mat image2){
     Mat I_1 = image1;
     Mat I_2 = image2;
 
-    //-- Step 1: Detect the keypoints using SURF Detector
-    int minHessian = 400;
-
-    Ptr<SURF> detector = SURF::create(minHessian);
-
-    std::vector<KeyPoint> keypoints_object, keypoints_scene;
-
-    detector->detect(I_1, keypoints_object);
-    detector->detect(I_2, keypoints_scene);
-
-    //-- Step 2: Calculate descriptors (feature vectors)
-    Ptr<SURF> extractor = SURF::create();
-    //SurfDescriptorExtractor extractor;
-
-    Mat descriptors_object, descriptors_scene;
-
-    extractor->compute(I_1, keypoints_object, descriptors_object);
-    extractor->compute(I_2, keypoints_scene, descriptors_scene);
-
-    //-- Step 3: Matching descriptor vectors using FLANN matcher
-    FlannBasedMatcher matcher;
-    std::vector< DMatch > matches;
-    matcher.match(descriptors_object, descriptors_scene, matches);
-
-    double max_dist = 0; double min_dist = 100;
-
-    //-- Quick calculation of max and min distances between keypoints
-    for (int i = 0; i < descriptors_object.rows; i++){
-        double dist = matches[i].distance;
-        if (dist < min_dist) min_dist = dist;
-        if (dist > max_dist) max_dist = dist;
-    }
-
-    printf("-- Max dist : %f \n", max_dist);
-    printf("-- Min dist : %f \n", min_dist);
-
-    //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-    std::vector< DMatch > good_matches;
-
-    for (int i = 0; i < descriptors_object.rows; i++)
-    {
-        if (matches[i].distance < 3 * min_dist)
-        {
-            good_matches.push_back(matches[i]);
-        }
-    }
-
-    Mat img_matches;
-    drawMatches(I_1, keypoints_object, I_2, keypoints_scene,
-                good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-                std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-
-    //-- Localize the object
-    std::vector<Point2f> obj;
-    std::vector<Point2f> scene;
-
-    for (int i = 0; i < good_matches.size(); i++){
-        //-- Get the keypoints from the good matches
-        obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
-        scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
-    }
-
-    Mat H_12 = findHomography(obj, scene, RANSAC);
-
-    std::cout << H_12 << '\n';
-
-    // //-- Get the corners from the image_1 ( the object to be "detected" )
-    // std::vector<Point2f> obj_corners(4);
-    // obj_corners[0] = cvPoint(0, 0); obj_corners[1] = cvPoint(I_1.cols, 0);
-    // obj_corners[2] = cvPoint(I_1.cols, I_1.rows); obj_corners[3] = cvPoint(0, I_1.rows);
-    // std::vector<Point2f> scene_corners(4);
+    cv::Ptr<Feature2D> f2d = xfeatures2d::SIFT::create();
 
 
-    // Use the Homography Matrix to warp the images
-    Mat warpImage2 = Mat::zeros(360,480,CV_8UC1);
-    warpPerspective(I_2, warpImage2, H_12, Size(I_2.cols*2, I_2.rows*2), INTER_CUBIC);
+    	// Step 1: Detect the keypoints:
+    	std::vector<KeyPoint> keypoints_1, keypoints_2;
+    	f2d->detect( I_1, keypoints_1 );
+    	f2d->detect( I_2, keypoints_2 );
 
-    //Point a cv::Mat header at it (no allocation is done)
-    Mat final(Size(I_2.cols*2 + I_1.cols, I_2.rows*2),CV_8UC3);
-    Mat testPlane(Size(I_2.cols*2 + I_1.cols, I_2.rows*2),CV_8UC3);
-     Mat roi1(final, Rect(0, 0,  I_1.cols, I_1.rows));
-     Mat roi2(final, Rect(0, 0, I_2.cols, I_2.rows));
+    	// Step 2: Calculate descriptors (feature vectors)
+    	Mat descriptors_1, descriptors_2;
+    	f2d->compute( I_1, keypoints_1, descriptors_1 );
+    	f2d->compute( I_2, keypoints_2, descriptors_2 );
 
-     Mat test(testPlane, Rect(0, 0,  I_1.cols, I_1.rows));
-     I_1.copyTo(test);
+    	// Step 3: Matching descriptor vectors using BFMatcher :
+    	BFMatcher matcher;
+    	std::vector< DMatch > matches;
+    	matcher.match( descriptors_1, descriptors_2, matches );
 
-    warpImage2.copyTo(roi2);
-    I_1.copyTo(roi1);
+    	// Keep best matches only to have a nice drawing.
+    	// We sort distance between descriptor matches
+    	Mat index;
+    	int nbMatch = int(matches.size());
+    	Mat tab(nbMatch, 1, CV_32F);
+    	for (int i = 0; i < nbMatch; i++)
+    		tab.at<float>(i, 0) = matches[i].distance;
+    	sortIdx(tab, index, SORT_EVERY_COLUMN + SORT_ASCENDING);
+    	vector<DMatch> bestMatches;
 
-    return testPlane;
+    	for (int i = 0; i < 200; i++)
+    		bestMatches.push_back(matches[index.at < int > (i, 0)]);
 
-    // cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
-    // I_2.copyTo(half);
-   //return result;
+
+    	// 1st image is the destination image and the 2nd image is the src image
+    	std::vector<Point2f> dst_pts;                   //1st
+    	std::vector<Point2f> source_pts;                //2nd
+
+    	for (vector<DMatch>::iterator it = bestMatches.begin(); it != bestMatches.end(); ++it) {
+    		cout << it->queryIdx << "\t" <<  it->trainIdx << "\t"  <<  it->distance << "\n";
+    		//-- Get the keypoints from the good matches
+    		dst_pts.push_back( keypoints_1[ it->queryIdx ].pt );
+    		source_pts.push_back( keypoints_2[ it->trainIdx ].pt );
+    	}
+
+    	Mat H_12 = findHomography( source_pts, dst_pts, CV_RANSAC );
+    	cout << H_12 << endl;
+      Mat warpImage2;
+      warpPerspective(I_2, warpImage2, H_12, Size(I_1.cols*2, I_1.rows*2), INTER_CUBIC);
+
+      //Point a cv::Mat header at it (no allocation is done)
+      Mat final(Size(I_1.cols*2 + I_1.cols, I_1.rows*2),CV_8UC3);
+
+      Mat roi1(final, Rect(0, 0,  I_1.cols, I_1.rows));
+      Mat roi2(final, Rect(0, 0, warpImage2.cols, warpImage2.rows));
+      warpImage2.copyTo(roi2);
+      I_1.copyTo(roi1);
+
+    return final;
 
 }
-
-  // Mat translateImg(Mat &img, int offsetx, int offsety){
-  //   Mat trans_mat = (Mat_<double>(2,3) << 1, 0, offsetx, 0, 1, offsety);
-  //   warpAffine(img,img,trans_mat,img.size());
-  //   return trans_mat;
-  //
-  // }
 
 void readme(){
     std::cout << " Usage: ./SURF_descriptor <img1> <img2>" << std::endl;
