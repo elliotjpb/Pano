@@ -63,18 +63,8 @@ Mat Stitching(Mat image1,Mat image2){
 
     	Mat H_12 = findHomography( source_pts, dst_pts, CV_RANSAC );
     	cout << H_12 << endl;
-      Mat warpImage2;
-      warpPerspective(I_2, warpImage2, H_12, Size(I_1.cols*2, I_1.rows*2), INTER_CUBIC);
 
-      //Point a cv::Mat header at it (no allocation is done)
-      Mat final(Size(I_1.cols*2 + I_1.cols, I_1.rows*2),CV_8UC3);
-
-      Mat roi1(final, Rect(0, 0,  I_1.cols, I_1.rows));
-      Mat roi2(final, Rect(0, 0, warpImage2.cols, warpImage2.rows));
-      warpImage2.copyTo(roi2);
-      I_1.copyTo(roi1);
-
-    return final;
+      return H_12;
 
 }
 
@@ -88,13 +78,25 @@ int main(int argc, char** argv){
   // Create a VideoCapture object and open the input file
   VideoCapture cap1("left.mov");
   VideoCapture cap2("right.mov");
-
   // Check if camera opened successfully
   if(!cap1.isOpened() || !cap2.isOpened()){
     cout << "Error opening video stream or file" << endl;
     return -1;
   }
-    //Trying to loop frames
+  Mat I1, h_I1;
+  Mat I2, h_I2;
+  if (cap1.read(I1)){
+      h_I1 = I1;
+  }
+
+  if (cap2.read(I2)){
+      h_I2 = I2;
+  }
+Mat homography;
+
+homography = Stitching(h_I1,h_I2);
+
+//Trying to loop frames
     for (;;){
     Mat cap1frame;
     Mat cap2frame;
@@ -106,13 +108,19 @@ int main(int argc, char** argv){
     if (cap1frame.empty() || cap2frame.empty())
       break;
 
-    std::vector<Mat> stitched;
+      Mat warpImage2;
+      warpPerspective(cap2frame, warpImage2, homography, Size(cap1frame.cols*2, cap1frame.rows*2), INTER_CUBIC);
 
-    stitched.push_back (Stitching(cap1frame,cap2frame));
+      //Point a cv::Mat header at it (no allocation is done)
+      Mat final(Size(cap1frame.cols*2 + cap1frame.cols, cap1frame.rows*2),CV_8UC3);
 
-    for (int i=0; i < stitched.size(); i++) {
-      imshow ("Result", i);
-    }
+      Mat roi1(final, Rect(0, 0,  cap1frame.cols, cap1frame.rows));
+      Mat roi2(final, Rect(0, 0, warpImage2.cols, warpImage2.rows));
+      warpImage2.copyTo(roi2);
+      cap1frame.copyTo(roi1);
+
+      imshow ("Result", final);
+
 
     //Above not working
     //Instead attempt to find homoigraphy in stitching function for first frame
