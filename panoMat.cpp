@@ -7,6 +7,7 @@
 #include "opencv2/xfeatures2d.hpp"
 #include <opencv2/xfeatures2d/nonfree.hpp>
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 using namespace cv::xfeatures2d;
 using namespace std;
@@ -73,12 +74,6 @@ Mat Stitching(Mat image1,Mat image2){
       warpImage2.copyTo(roi2);
       I_1.copyTo(roi1);
 
-      // cv::Mat result;
-      // warpPerspective(I_2,result,H_12,cv::Size(800,600));
-      // cv::Mat half(result,cv::Rect(0,0,I_2.cols,I_2.rows));
-      // I_1.copyTo(half);
-      // return result;
-
     return final;
 
 }
@@ -91,7 +86,6 @@ void readme(){
 int main(int argc, char** argv){
 
   // Create a VideoCapture object and open the input file
-  // If the input is the web camera, pass 0 instead of the video file name
   VideoCapture cap1("left.mov");
   VideoCapture cap2("right.mov");
 
@@ -100,13 +94,11 @@ int main(int argc, char** argv){
     cout << "Error opening video stream or file" << endl;
     return -1;
   }
-
-    //int loop=0;
-    while(1){
-
+    //Trying to loop frames
+    for (;;){
     Mat cap1frame;
     Mat cap2frame;
-    // Capture frame-by-frame
+
     cap1 >> cap1frame;
     cap2 >> cap2frame;
 
@@ -114,11 +106,31 @@ int main(int argc, char** argv){
     if (cap1frame.empty() || cap2frame.empty())
       break;
 
-    imshow( "Result", Stitching(cap1frame,cap2frame));
+    std::vector<Mat> stitched;
 
-    destroyWindow("Stitching");
+    stitched.push_back (Stitching(cap1frame,cap2frame));
 
-    waitKey(0);
-    return 0;
+    for (int i=0; i < stitched.size(); i++) {
+      imshow ("Result", i);
+    }
+
+    //Above not working
+    //Instead attempt to find homoigraphy in stitching function for first frame
+    //Then return that value.
+    //Then do the moving based on value in main function.
+
+    ////--------
+    //get first frame of video
+    //Get homography. From first frame of each video
+    //warpPerspective of cap1Frame and cap2frame as looping though.
+    //imShow (final);
+
+    //sending each frame from each video to the stitch function then displaying
+    //imshow( "Result", Stitching(cap1frame,cap2frame));
+
+    if(waitKey(30) >= 0) break;
+     //destroyWindow("Stitching");
+    // waitKey(0);
   }
+  return 0;
 }
