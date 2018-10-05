@@ -9,16 +9,12 @@
 #include <opencv2/xfeatures2d/cuda.hpp>
 #include <opencv2/opencv.hpp>
 #include <vector>
-//#include "cuda.hpp"
-//#include <cuda.h>
-//#include <cuda_runtime_api.h>
-
-//using namespace cv::gpu;
 
 using namespace cv::xfeatures2d;
 using namespace std;
 using namespace cv;
-//To get homography from images passed in. Currently just spesifying homography
+//To get homography from images passed in. Matching points in the images.
+
 Mat Stitching(Mat image1,Mat image2){
 
     Mat I_1 = image1;
@@ -74,7 +70,7 @@ Mat Stitching(Mat image1,Mat image2){
 
 /** @function main */
 int main(int argc, char** argv){
-
+  //Mats to get the first frame of video and pass to Stitching function.
   Mat I1, h_I1;
   Mat I2, h_I2;
 
@@ -88,7 +84,7 @@ int main(int argc, char** argv){
     cout << "Error opening video stream or file" << endl;
     return -1;
   }
-
+//passing first frame to Stitching function
   if (cap1.read(I1)){
      h_I1 = I1;
    }
@@ -97,15 +93,15 @@ int main(int argc, char** argv){
      h_I2 = I2;
    }
    Mat homography;
-
+//passing here.
    homography = Stitching(h_I1,h_I2);
   std::cout << homography << '\n';
 
-
+//creating VideoWriter object with defined values.
 VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(1280,720));
 
 
-//Trying to loop frames
+//Looping through frames of both videos.
     for (;;){
     Mat cap1frame;
     Mat cap2frame;
@@ -116,20 +112,21 @@ VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(1280,72
     // If the frame is empty, break immediately
     if (cap1frame.empty() || cap2frame.empty())
       break;
-      //Need to precalcualte the warp between the images so it doesn't process each frame.
       Mat warpImage2;
       //warpPerspective(cap2frame, warpImage2, homography, Size(cap1frame.cols*2, cap1frame.rows*2), INTER_CUBIC);
+      //warping the second video cap2frame so it matches with the first one.
+      //size is defined as the final video size
       warpPerspective(cap2frame, warpImage2, homography, Size(1280,720), INTER_CUBIC);
-      //remap()
-      //cout << homography << endl;
-      //Point a cv::Mat header at it (no allocation is done)
+      //final is the final canvas where both videos will be warped onto.
       Mat final (Size(1280,720), CV_8UC3);
       //Mat final(Size(cap1frame.cols*2 + cap1frame.cols, cap1frame.rows*2),CV_8UC3);
+      //Using roi getting the relivent areas of each video.
       Mat roi1(final, Rect(0, 0,  cap1frame.cols, cap1frame.rows));
       Mat roi2(final, Rect(0, 0, warpImage2.cols, warpImage2.rows));
+      //warping images on to the canvases which are linked with the final canvas.
       warpImage2.copyTo(roi2);
       cap1frame.copyTo(roi1);
-
+      //writing to video.
       video.write(final);
 
       //imshow ("Result", final);
