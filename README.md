@@ -12,6 +12,10 @@ I also create a video writer object to export the resultant video to an avi file
 
 ## Little openCV tips I have found
 
+Finding the homography between two images
+
+https://docs.opencv.org/3.3.0/d7/dff/tutorial_feature_homography.html
+
 Here defining a matrix from the array of values in data. Then in the creation of the Mat defining it as a 3x3 matrix and passing by reference the matrix values.
 
  `float data [9] ={1.000822995828627, 1.28264576544064e-06, 599.9977067973233,     0.0001423991871877334, 1.000058080711918, 0.001653846848108326,    1.214023035530543e-06, 2.990814694940521e-08, 1};`
