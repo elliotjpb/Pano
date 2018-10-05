@@ -100,7 +100,7 @@ float data [9] =
   }
 
 
-VideoWriter video("outcpp.avi",CV_FOURCC('M','J','P','G'),30, Size(2040,1440));
+VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(2040,1440));
 
 
 //Trying to loop frames
