@@ -1,3 +1,4 @@
+![](https://github.com/elliotjpb/Pano/blob/master/outputImage.jpg?raw=true)
 
 # Video Panorama
 
