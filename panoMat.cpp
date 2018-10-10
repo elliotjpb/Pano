@@ -75,8 +75,8 @@ int main(int argc, char** argv){
   Mat I2, h_I2;
 
   // Create a VideoCapture object and open the input file
-  VideoCapture cap1("left.mov");
-  VideoCapture cap2("right.mov");
+  VideoCapture cap1("workingVideo/left.mov");
+  VideoCapture cap2("workingVideo/right.mov");
   cap1.set(CV_CAP_PROP_BUFFERSIZE, 10);
   cap2.set(CV_CAP_PROP_BUFFERSIZE, 10);
   //Check if camera opened successfully
@@ -98,7 +98,7 @@ int main(int argc, char** argv){
   std::cout << homography << '\n';
 
 //creating VideoWriter object with defined values.
-VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(1280,720));
+VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(3840,1440));
 
 
 //Looping through frames of both videos.
@@ -116,9 +116,10 @@ VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(1280,72
       //warpPerspective(cap2frame, warpImage2, homography, Size(cap1frame.cols*2, cap1frame.rows*2), INTER_CUBIC);
       //warping the second video cap2frame so it matches with the first one.
       //size is defined as the final video size
-      warpPerspective(cap2frame, warpImage2, homography, Size(1280,720), INTER_CUBIC);
+      warpPerspective(cap2frame, warpImage2, homography, Size(cap1frame.cols*2, cap1frame.rows*2), INTER_CUBIC);
+      //std::cout << "cols " << (cap1frame.cols*2) << "rows " << (cap1frame.rows*2) << '\n';
       //final is the final canvas where both videos will be warped onto.
-      Mat final (Size(1280,720), CV_8UC3);
+      Mat final(Size(cap1frame.cols*2 + cap1frame.cols, cap1frame.rows*2),CV_8UC3);
       //Mat final(Size(cap1frame.cols*2 + cap1frame.cols, cap1frame.rows*2),CV_8UC3);
       //Using roi getting the relivent areas of each video.
       Mat roi1(final, Rect(0, 0,  cap1frame.cols, cap1frame.rows));
@@ -126,6 +127,9 @@ VideoWriter video("video/output.avi",CV_FOURCC('M','J','P','G'),30, Size(1280,72
       //warping images on to the canvases which are linked with the final canvas.
       warpImage2.copyTo(roi2);
       cap1frame.copyTo(roi1);
+      int rows = final.rows;
+      int cols = final.cols;
+      //std::cout << "rows " << rows << "cols " << cols << '\n';
       //writing to video.
       video.write(final);
 
